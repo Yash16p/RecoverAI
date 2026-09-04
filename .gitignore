@@ -1,0 +1,131 @@
+﻿# ===========================================
+# RecoverAI - Git Ignore Configuration
+# ===========================================
+
+# ============ Python ============
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# ============ Environment & Secrets ============
+.env
+.env.local
+.env.*.local
+secrets/
+*.pem
+*.key
+
+# ============ IDE & Editors ============
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# ============ Logs ============
+*.log
+logs/
+*.out
+*.err
+out.log
+err.log
+server_out.txt
+server_err.txt
+
+# ============ Test & Debug Files ============
+check_*.py
+test_*.txt
+debug_*.py
+*_test_*.py
+_test_*.py
+*.output
+langfuse_output.txt
+docx_content.txt
+
+# ============ Node.js / Frontend ============
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+dist/
+.cache/
+.parcel-cache/
+
+# ============ Build Outputs ============
+*.build/
+coverage/
+.nyc_output/
+htmlcov/
+.coverage
+.coverage.*
+
+# ============ Database ============
+*.db
+*.sqlite
+*.sqlite3
+
+# ============ OS Files ============
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ============ Temporary Files ============
+*.tmp
+*.temp
+*.bak
+*.backup
+tmp/
+temp/
+
+# ============ Large Data Files ============
+# Synthetic training data (regenerate with: python -m app.synthetic)
+backend/data/synthetic/*.jsonl
+backend/data/recoverai/*.json
+backend/data/baseline/*.json
+!backend/data/.gitkeep
+
+# ============ Alembic ============
+alembic/versions/*.pyc
+
+# ============ Jupyter ============
+.ipynb_checkpoints/
+*.ipynb
+
+# ============ Misc ============
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
