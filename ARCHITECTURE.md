@@ -1,4 +1,4 @@
-﻿# RecoverAI - Complete System Architecture
+﻿# RecoverAI - System Architecture
 
 > **RecoverAI is an event-driven revenue recovery engine that continuously detects revenue at risk, estimates the incremental value of possible interventions, applies deterministic policy and freshness checks, executes one bounded action through an MCP-controlled Razorpay boundary, and re-evaluates from the resulting state until the revenue is recovered or recovery is safely stopped.**
 
@@ -315,58 +315,6 @@ sequenceDiagram
 
 ---
 
-## File Structure
-
-```
-RecoverAI/
-├── backend/
-│   ├── app/
-│   │   ├── main.py              # FastAPI gateway, webhooks, test endpoints
-│   │   ├── config.py            # Environment settings
-│   │   ├── worker.py            # Async event consumer
-│   │   ├── razorpay_client.py   # Razorpay API wrapper
-│   │   ├── executor.py          # Action execution
-│   │   ├── observability.py     # Langfuse tracing
-│   │   │
-│   │   ├── api/
-│   │   │   └── dashboard.py     # Dashboard API routes
-│   │   │
-│   │   ├── database/
-│   │   │   ├── connection.py    # PostgreSQL + Redis pools
-│   │   │   └── models.py        # SQLAlchemy models
-│   │   │
-│   │   ├── orchestrator/
-│   │   │   ├── graph.py         # LangGraph single engine
-│   │   │   ├── states.py        # Typed state definitions
-│   │   │   └── db_runner.py     # DB ↔ orchestrator bridge
-│   │   │
-│   │   ├── recovery/
-│   │   │   ├── scoring.py       # P0, Pa, Uplift, Net Value
-│   │   │   ├── actions.py       # Action definitions + costs
-│   │   │   └── policy.py        # Deterministic policy rules
-│   │   │
-│   │   └── mcp/
-│   │       ├── __init__.py      # MCP tool server
-│   │       └── freshness.py     # Pre-execution validation
-│   │
-│   ├── .env                     # Secrets + config
-│   ├── requirements.txt
-│   └── test_matrix.py           # 20-scenario test suite
-│
-├── frontend/
-│   ├── src/
-│   │   ├── pages/
-│   │   │   ├── Dashboard.tsx    # Case overview + metrics
-│   │   │   ├── CaseDetail.tsx   # Timeline + reasoning view
-│   │   │   └── Storefront.tsx   # Demo store
-│   │   └── App.tsx
-│   └── package.json
-│
-└── ARCHITECTURE.md              # This document
-```
-
----
-
 ## Technology Stack
 
 | Layer | Technology | Purpose |
@@ -380,47 +328,3 @@ RecoverAI/
 | Payments | Razorpay Test Mode | Real payment operations |
 | Observability | Langfuse | Trace dashboard |
 | Frontend | React + Tailwind | Merchant dashboard |
-
----
-
-## Why This Architecture Works
-
-### What judges might ask:
-
-**Q: "Are you just generating a fixed retry sequence?"**
-
-A: No. RecoverAI never commits to a pre-planned recovery sequence. Each subsequent action is selected from the latest observed state through re-evaluation.
-
-**Q: "Can the LLM move money directly?"**
-
-A: No. The LLM reasons about what action might help, but:
-- Economic engine measures incremental value
-- Policy gate authorizes deterministically  
-- MCP boundary validates capability
-- Freshness check re-validates before execution
-
-**Q: "What happens if the customer pays while a retry is scheduled?"**
-
-A: The freshness check detects the case is already recovered and cancels the stale action. No duplicate charge occurs.
-
-**Q: "How do you know recovery was caused by your intervention vs natural recovery?"**
-
-A: We model P0 (natural recovery probability) separately from Pa (post-action probability). The uplift is Pa - P0, and we measure expected incremental net recovery, not raw recovery rate.
-
----
-
-## Submission Evidence Checklist
-
-| Evidence | Status | Location |
-|----------|--------|----------|
-| End-to-end Razorpay recovery | ✅ | Storefront → payment_link.paid |
-| Held-out batch benchmark | ✅ | test_matrix.py |
-| Policy-blocked action | ✅ | policy.py rules |
-| Safe failure recovery | ✅ | freshness.py |
-| Stale-action cancellation | ✅ | Freshness check demo |
-| Langfuse trace | ✅ | cloud.langfuse.com |
-| Reproducible benchmark | ✅ | `python test_matrix.py` |
-
----
-
-*Architecture frozen. Next work: benchmark hardening → failure testing → demo polish.*

@@ -129,3 +129,6 @@ alembic/versions/*.pyc
 .mypy_cache/
 .pytest_cache/
 .ruff_cache/
+
+# Project documents
+*.docx
