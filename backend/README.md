@@ -1,52 +1,73 @@
 # RecoverAI — Backend
 
-Revenue Recovery Control Plane for Razorpay AI Buildathon 2026 · Track 03.
+The FastAPI gateway, async worker, LangGraph orchestrator, MCP execution boundary, and all recovery logic live here.
 
-## Quick start
+For the full system description, architecture, and benchmark results, see the [root README](../README.md).
+
+---
+
+## Quick Start
 
 ```bash
 cd backend
 python -m venv .venv
-.venv\Scripts\activate        # Windows
+.venv\Scripts\activate          # Windows
+# source .venv/bin/activate     # macOS / Linux
 pip install -r requirements.txt
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-## Expose via ngrok (for Razorpay webhook registration)
+Copy `.env.example` to `.env` and fill in your credentials, then:
+
+```bash
+# Apply DB migrations
+alembic upgrade head
+
+# API server
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# Worker (separate terminal)
+python -m app.worker
+
+# Scheduler — polls for due scheduled actions every 30s (separate terminal)
+python -m app.scheduler
+```
+
+## Expose via ngrok (for Razorpay webhook delivery)
 
 ```bash
 ngrok http 8000
 ```
 
-Copy the `https://YOUR-NGROK-ID.ngrok-free.app` URL and:
-1. Paste it into `.env` as `PUBLIC_BASE_URL`.
-2. Register `https://YOUR-NGROK-ID.ngrok-free.app/webhook/razorpay` in the
-   Razorpay dashboard → Settings → Webhooks.
-3. Copy the webhook secret shown by Razorpay into `.env` as `RAZORPAY_WEBHOOK_SECRET`.
+1. Copy the ngrok URL into `.env` as `PUBLIC_BASE_URL`
+2. Register `https://YOUR-NGROK-ID.ngrok-free.app/webhooks/razorpay` in Razorpay dashboard → Settings → Webhooks
+3. Copy the webhook secret into `.env` as `RAZORPAY_WEBHOOK_SECRET`
 
-## Endpoints
+## Key Endpoints
 
-| Method | Path                  | Description                        |
-|--------|-----------------------|------------------------------------|
-| GET    | `/health`             | Liveness check                     |
-| POST   | `/webhook/razorpay`   | Razorpay webhook receiver          |
-| GET    | `/docs`               | Auto-generated Swagger UI          |
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health` | Liveness check |
+| POST | `/webhooks/razorpay` | Razorpay webhook receiver (HMAC verified) |
+| GET | `/docs` | Swagger UI |
+| POST | `/test/payment-failed` | Simulate a payment failure |
+| POST | `/test/subscription-halted` | Simulate a halted subscription |
+| POST | `/test/invoice-overdue` | Simulate an overdue invoice |
+| POST | `/storefront/create-order` | Create order from demo storefront |
+| POST | `/storefront/abandon` | Simulate checkout abandonment |
+| GET | `/dashboard/summary` | Overview metrics |
+| GET | `/dashboard/cases` | Paginated case list |
 
-## Webhook events handled
+## Running the Benchmark
 
-| Event                   | Action (stub)                        |
-|-------------------------|--------------------------------------|
-| `payment.failed`        | Create / update RecoveryCase         |
-| `payment.captured`      | Mark RecoveryCase RECOVERED          |
-| `order.paid`            | Mark RecoveryCase RECOVERED          |
-| `subscription.halted`   | Create subscription RecoveryCase     |
-| `subscription.charged`  | Mark subscription case RECOVERED     |
-| `invoice.paid`          | Mark receivables case RECOVERED      |
-| `payment_link.paid`     | Mark RecoveryCase RECOVERED          |
+```bash
+# Generate synthetic data
+python -m app.synthetic.generator --count 500 --seed 42 --split 0.8
 
-## Next steps
+# Evaluate RecoverAI against baselines
+python test_matrix.py
 
-- Wire PostgreSQL (models + migrations via Alembic)
-- Wire Redis (event bus + worker queues)
-- Implement LangGraph recovery orchestrator
-- Implement MCP execution boundary
+# Side-by-side comparison
+python -m app.baseline.compare \
+  --dataset data/synthetic/eval_seed42_n100.jsonl \
+  --recoverai data/recoverai/eval_report_seed42.json
+```
